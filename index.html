@@ -4,175 +4,121 @@
 <meta charset="UTF-8">
 <title>College Together — Student Outcomes</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <style>
   :root{
-    --bg:#060B12;
-    --panel:#0B131E;
-    --panel-line:#1B2A3D;
-    --grid:#0F1B29;
-    --cyan:#4FE3EC;
-    --cyan-dim:#245A62;
-    --amber:#FFB454;
-    --text:#D9E6F2;
-    --muted:#5C7488;
-    --red:#FF6B5E;
+    --paper:#F4F3ED;
+    --ink:#14161A;
+    --line:#D8D5C9;
+    --cobalt:#1E3FE0;
+    --cobalt-dim:#DCE2FB;
+    --edge:#FF4423;
+    --edge-dim:#FFE4DC;
+    --muted:#6B6A63;
   }
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
+  html,body{margin:0;}
   body{
-    background:
-      linear-gradient(var(--grid) 1px, transparent 1px) 0 0/100% 40px,
-      linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/40px 100%,
-      var(--bg);
-    color:var(--text);
-    font-family:'IBM Plex Mono', monospace;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter', sans-serif;
     min-height:100vh;
-    position:relative;
   }
-  body::before{
-    content:"";
-    position:fixed; inset:0;
-    background:radial-gradient(ellipse at 50% -10%, rgba(79,227,236,.08), transparent 55%);
-    pointer-events:none;
-  }
-  @media (prefers-reduced-motion: reduce){
-    *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;}
-  }
+  .wrap{max-width:920px; margin:0 auto; padding:0 28px 60px;}
 
-  .wrap{max-width:980px; margin:0 auto; padding:0 28px 70px; position:relative;}
-
-  /* ---- Masthead ---- */
   .masthead{
-    padding:32px 0 18px;
     display:flex; justify-content:space-between; align-items:flex-end;
-    border-bottom:1px solid var(--panel-line);
-    flex-wrap:wrap; gap:16px;
+    border-bottom:4px solid var(--ink);
+    padding-bottom:18px; margin-top:36px;
+    flex-wrap:wrap; gap:14px;
   }
-  .wordmark{ font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:var(--muted); }
+  .wordmark{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--muted);
+  }
   h1{
-    font-family:'Space Grotesk', sans-serif;
-    font-weight:700; font-size:38px; margin:8px 0 0;
-    letter-spacing:-0.01em; color:#EEF6FC;
-    text-shadow:0 0 24px rgba(79,227,236,.18);
+    font-family:'Archivo', sans-serif;
+    font-weight:800; font-size:42px; margin:6px 0 0;
+    letter-spacing:-0.01em; text-transform:uppercase;
   }
-  .status-line{
-    display:flex; align-items:center; gap:8px;
-    font-size:11px; letter-spacing:.08em; text-transform:uppercase;
-    color:var(--cyan); white-space:nowrap;
+  .live-tag{
+    display:flex; align-items:center; gap:7px;
+    font-family:'IBM Plex Mono', monospace; font-size:11px;
+    letter-spacing:.08em; text-transform:uppercase; color:var(--ink);
   }
-  .status-line .dot{
-    width:7px; height:7px; border-radius:50%; background:var(--cyan);
-    box-shadow:0 0 8px 1px var(--cyan); animation:blink 1.8s infinite;
-  }
-  .status-line.error .dot{ background:var(--red); box-shadow:0 0 8px 1px var(--red); animation:none; }
-  .status-line.error{ color:var(--red); }
+  .live-tag .dot{ width:9px; height:9px; background:var(--edge); border-radius:50%; }
+  .live-tag.error .dot{ background:#B3271A; }
+  .live-tag.error{ color:#B3271A; }
   @keyframes blink{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+  .live-tag:not(.error) .dot{ animation:blink 1.8s infinite; }
 
-  /* ---- Section labels ---- */
-  .section-label{
-    font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted);
-    margin:50px 0 4px; display:flex; align-items:center; gap:8px;
-  }
-  .section-label::before{ content:"›"; color:var(--cyan); }
-  .section-title{
-    font-family:'Space Grotesk', sans-serif; font-size:22px; font-weight:600;
-    margin:0 0 20px; color:#EEF6FC;
+  .section-head{ display:flex; align-items:center; gap:10px; margin:44px 0 16px; }
+  .section-head .bar{ width:7px; height:22px; background:var(--cobalt); border-radius:4px; }
+  .section-head h2{
+    font-family:'Archivo', sans-serif; font-weight:700; font-size:19px;
+    margin:0; text-transform:uppercase; letter-spacing:.01em;
   }
 
-  /* ---- HUD panel wrapper ---- */
-  .panel{
-    position:relative;
-    background:linear-gradient(180deg, var(--panel), #08101A);
-    border:1px solid var(--panel-line);
-    border-radius:2px;
-  }
-  .panel::before, .panel::after{
-    content:""; position:absolute; width:14px; height:14px;
-    border:1.5px solid var(--cyan); opacity:.8;
-  }
-  .panel::before{ top:-1px; left:-1px; border-right:none; border-bottom:none; }
-  .panel::after{ bottom:-1px; right:-1px; border-left:none; border-top:none; }
-
-  /* ---- Cohort table (scrollable) ---- */
-  .ledger-scroll{ max-height:480px; overflow-y:auto; }
-  .ledger-scroll::-webkit-scrollbar{ width:8px; }
-  .ledger-scroll::-webkit-scrollbar-thumb{ background:var(--panel-line); border-radius:4px; }
-  .ledger-row{
+  .table-frame{ border:2px solid var(--ink); border-radius:16px; overflow:hidden; }
+  .row{
     display:grid;
-    grid-template-columns:120px 96px 1fr 1fr;
-    align-items:center;
-    padding:14px 20px;
-    border-bottom:1px solid var(--panel-line);
-    gap:14px;
+    grid-template-columns:130px 110px 1fr;
+    gap:14px; align-items:center;
+    padding:13px 18px;
+    border-bottom:1px solid var(--line);
   }
-  .ledger-row:last-child{ border-bottom:none; }
-  .ledger-row.head{
-    font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted);
-    padding-top:14px; padding-bottom:12px;
-    position:sticky; top:0; background:var(--panel); z-index:2;
+  .row:last-child{ border-bottom:none; }
+  .row.head{
+    background:var(--ink); color:var(--paper);
+    font-family:'IBM Plex Mono', monospace; font-size:10px;
+    letter-spacing:.1em; text-transform:uppercase;
   }
-  .cohort-year{
-    font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:15px; color:#EEF6FC;
-  }
+  .scroll-body{ max-height:480px; overflow-y:auto; }
+  .scroll-body::-webkit-scrollbar{ width:8px; }
+  .scroll-body::-webkit-scrollbar-thumb{ background:var(--line); border-radius:4px; }
+
+  .cohort{ font-family:'Archivo', sans-serif; font-weight:700; font-size:15px; }
   .badge{
-    font-size:10px; letter-spacing:.06em; text-transform:uppercase;
-    padding:3px 8px; border-radius:2px; text-align:center; width:fit-content;
+    font-family:'IBM Plex Mono', monospace; font-size:10px;
+    letter-spacing:.05em; text-transform:uppercase;
+    padding:4px 11px; width:fit-content; border-radius:20px;
   }
-  .badge.completed{ color:var(--cyan); border:1px solid var(--cyan-dim); }
-  .badge.progress{ color:var(--amber); border:1px solid rgba(255,180,84,.4); }
+  .badge.done{ background:var(--cobalt-dim); color:var(--cobalt); }
+  .badge.wip{ background:var(--edge-dim); color:var(--edge); }
 
+  .metric-wrap{ display:flex; flex-direction:column; gap:4px; }
+  .metric-caption{ font-family:'IBM Plex Mono', monospace; font-size:9px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
   .metric{ display:flex; align-items:center; gap:10px; }
-  .metric-bar-track{
-    flex:1; height:6px; background:#101C2A; border-radius:1px; overflow:hidden;
-    box-shadow:inset 0 0 0 1px var(--panel-line);
-  }
-  .metric-bar-fill{
-    height:100%; width:0%; border-radius:1px;
-    transition:width 1s cubic-bezier(.2,.8,.2,1);
-  }
-  .metric-bar-fill.overall{ background:linear-gradient(90deg, var(--cyan-dim), var(--cyan)); box-shadow:0 0 8px rgba(79,227,236,.5); }
-  .metric-bar-fill.persistence{ background:linear-gradient(90deg, #7a5a1e, var(--amber)); box-shadow:0 0 8px rgba(255,180,84,.4); }
-  .metric-num{
-    font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:13px;
-    color:#EEF6FC; width:42px; text-align:right; flex-shrink:0;
-  }
-  .metric-num.dash{ color:var(--muted); }
+  .bar-track{ flex:1; height:8px; background:#E7E4D8; position:relative; border-radius:5px; overflow:hidden; }
+  .bar-fill{ height:100%; background:var(--ink); border-radius:5px; width:0%; transition:width 1s cubic-bezier(.2,.8,.2,1); }
+  .bar-fill.accent{ background:var(--cobalt); }
+  .num{ font-family:'Archivo', sans-serif; font-weight:700; font-size:14px; width:42px; text-align:right; flex-shrink:0; }
+  .num.dash{ color:var(--muted); }
 
-  /* ---- Term readouts ---- */
   .readouts{ display:grid; grid-template-columns:1fr 1fr; gap:20px; }
-  .readout{ padding:24px 24px 22px; }
-  .readout-label{
-    font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted);
-    display:flex; justify-content:space-between; align-items:center;
-  }
-  .readout-label span.tag{ color:var(--cyan); }
+  .readout{ border:2px solid var(--ink); border-radius:20px; padding:22px 22px 20px; position:relative; }
+  .readout::before{ content:""; position:absolute; top:16px; right:16px; width:14px; height:14px; border-radius:50%; background:var(--edge); }
+  .readout-label{ font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); }
   .readout-count{
-    font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:58px; line-height:1.1;
-    margin:10px 0 2px; color:#EEF6FC; text-shadow:0 0 20px rgba(79,227,236,.25);
-    font-variant-numeric:tabular-nums;
+    font-family:'Archivo', sans-serif; font-weight:800; font-size:56px;
+    line-height:1.1; margin:8px 0 2px; font-variant-numeric:tabular-nums;
   }
-  .readout-count::after{ content:"_"; color:var(--cyan); animation:blink 1s infinite; font-weight:400; }
-  .readout-sub{ font-size:11px; color:var(--muted); letter-spacing:.02em; }
+  .readout-sub{ font-size:12px; color:var(--muted); }
 
-  /* ---- Footer ---- */
   .footer{
-    margin-top:56px; padding-top:16px; border-top:1px solid var(--panel-line);
-    font-size:10px; color:var(--muted); letter-spacing:.04em;
+    margin-top:48px; padding-top:14px; border-top:2px solid var(--ink);
+    font-family:'IBM Plex Mono', monospace; font-size:10px; color:var(--muted);
     display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;
   }
-  .footer .tag{ color:var(--cyan); }
 
-  .loading-msg{ padding:30px 20px; text-align:center; color:var(--muted); font-size:12px; letter-spacing:.06em; }
+  .loading-msg{ padding:26px 18px; text-align:center; color:var(--muted); font-size:12px; letter-spacing:.04em; }
 
   @media (max-width:640px){
-    h1{font-size:28px;}
-    .ledger-row{grid-template-columns:80px 70px 1fr; }
-    .ledger-row .metric:nth-of-type(2){display:none;}
-    .ledger-row.head span:nth-child(4){display:none;}
+    h1{font-size:30px;}
+    .row{grid-template-columns:96px 90px 1fr; padding:12px;}
     .readouts{grid-template-columns:1fr;}
-    .readout-count{font-size:46px;}
+    .readout-count{font-size:44px;}
   }
 </style>
 </head>
@@ -181,56 +127,47 @@
 
   <div class="masthead">
     <div>
-      <div class="wordmark">College Together // Ops Console</div>
+      <div class="wordmark">College Together</div>
       <h1>Student Outcomes</h1>
     </div>
-    <div class="status-line" id="statusLine"><span class="dot"></span> <span id="statusText">Connecting…</span></div>
+    <div class="live-tag" id="liveTag"><span class="dot"></span> <span id="liveText">Connecting…</span></div>
   </div>
 
-  <div class="section-label">cohort_analysis.log</div>
-  <div class="section-title">On-time graduation &amp; persistence, all cohorts</div>
+  <div class="section-head"><div class="bar"></div><h2>Cohort outcomes</h2></div>
 
-  <div class="panel">
-    <div class="ledger-row head">
-      <div>Cohort</div>
-      <div>Status</div>
-      <div>On-time grad rate</div>
-      <div>Persistence rate</div>
-    </div>
-    <div class="ledger-scroll" id="ledgerBody">
+  <div class="table-frame">
+    <div class="row head"><div>Cohort</div><div>Status</div><div>Outcome</div></div>
+    <div class="scroll-body" id="ledgerBody">
       <div class="loading-msg">Loading cohort data…</div>
     </div>
   </div>
 
-  <div class="section-label">enrollment_status.live</div>
-  <div class="section-title">Currently enrolled, active terms</div>
+  <div class="section-head"><div class="bar"></div><h2>Active enrollment</h2></div>
 
   <div class="readouts">
-    <div class="panel readout">
-      <div class="readout-label">Term A <span class="tag">ACTIVE</span></div>
+    <div class="readout">
+      <div class="readout-label">Term A</div>
       <div class="readout-count" id="termA">--</div>
       <div class="readout-sub">students currently enrolled</div>
     </div>
-    <div class="panel readout">
-      <div class="readout-label">Term B <span class="tag">ACTIVE</span></div>
+    <div class="readout">
+      <div class="readout-label">Term B</div>
       <div class="readout-count" id="termB">--</div>
       <div class="readout-sub">students currently enrolled</div>
     </div>
   </div>
 
   <div class="footer">
-    <span>Source: <span class="tag">Google Sheet</span> — BADASS Data Dashboard</span>
+    <span>Source: Google Sheet — Big And Damn Awesome Statistics System (BADASS) Data Dashboard</span>
     <span id="lastUpdated">Last refreshed: —</span>
   </div>
 
 </div>
 
 <script>
-  // ---- Configuration: swap this if the published sheet URL ever changes ----
   const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSoNeqDEspmMSvQW7IRh-jdluV5KG-uD21Zo5svK4ufi-aYXJShG5OB6fqw-Adg7a-mQ-8GhgsixYTf/pub?gid=2062460542&single=true&output=csv";
-  const REFRESH_MS = 5 * 60 * 1000; // Google's publish-to-web refreshes every ~5 min, so no point polling faster
+  const REFRESH_MS = 5 * 60 * 1000;
 
-  // Accepts "27.3%", "0.273", or 0.273 and always returns a 0-100 number
   function toPercent(raw){
     if(raw === undefined || raw === null) return null;
     const cleaned = String(raw).replace('%','').trim();
@@ -256,45 +193,44 @@
     requestAnimationFrame(tick);
   }
 
-  function renderMetric(pct){
-    const has = pct !== null;
-    return { pct: has ? pct : 0, label: has ? Math.round(pct) + '%' : '—', dashClass: has ? '' : ' dash' };
-  }
-
   function renderLedger(rows){
     const body = document.getElementById('ledgerBody');
     body.innerHTML = '';
     rows.forEach(r => {
-      const overall = renderMetric(r.overall);
-      const persistence = renderMetric(r.persistence);
-      const badgeClass = r.status === 'Completed' ? 'completed' : 'progress';
+      const isCompleted = r.status === 'Completed';
+      const value = isCompleted ? r.overall : r.persistence;
+      const caption = isCompleted ? 'On-time graduation rate' : 'Persistence rate';
+      const barClass = isCompleted ? '' : 'accent';
+      const has = value !== null;
+      const pct = has ? value : 0;
+      const label = has ? Math.round(value) + '%' : '—';
+      const badgeClass = isCompleted ? 'done' : 'wip';
+
       const row = document.createElement('div');
-      row.className = 'ledger-row';
+      row.className = 'row';
       row.innerHTML = `
-        <div class="cohort-year">${r.cohort}</div>
+        <div class="cohort">${r.cohort}</div>
         <div><span class="badge ${badgeClass}">${r.status}</span></div>
-        <div class="metric">
-          <div class="metric-bar-track"><div class="metric-bar-fill overall" data-pct="${overall.pct}"></div></div>
-          <div class="metric-num${overall.dashClass}">${overall.label}</div>
-        </div>
-        <div class="metric">
-          <div class="metric-bar-track"><div class="metric-bar-fill persistence" data-pct="${persistence.pct}"></div></div>
-          <div class="metric-num${persistence.dashClass}">${persistence.label}</div>
+        <div class="metric-wrap">
+          <div class="metric-caption">${caption}</div>
+          <div class="metric">
+            <div class="bar-track"><div class="bar-fill ${barClass}" data-pct="${pct}"></div></div>
+            <div class="num${has ? '' : ' dash'}">${label}</div>
+          </div>
         </div>`;
       body.appendChild(row);
     });
-    // trigger bar animations
     requestAnimationFrame(() => {
       setTimeout(() => {
-        document.querySelectorAll('.metric-bar-fill').forEach(b => b.style.width = b.dataset.pct + '%');
+        document.querySelectorAll('.bar-fill').forEach(b => b.style.width = b.dataset.pct + '%');
       }, 80);
     });
   }
 
-  function setStatus(ok, text){
-    const line = document.getElementById('statusLine');
-    line.className = 'status-line' + (ok ? '' : ' error');
-    document.getElementById('statusText').textContent = text;
+  function setLive(ok, text){
+    const tag = document.getElementById('liveTag');
+    tag.className = 'live-tag' + (ok ? '' : ' error');
+    document.getElementById('liveText').textContent = text;
   }
 
   async function loadDashboard(){
@@ -340,11 +276,11 @@
       countUp(document.getElementById('termB'), termB);
       document.getElementById('lastUpdated').textContent =
         'Last refreshed: ' + new Date().toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
-      setStatus(true, 'Live · synced with sheet');
+      setLive(true, 'Live · synced with sheet');
 
     } catch(err){
       console.error('Dashboard load failed:', err);
-      setStatus(false, 'Connection issue — showing last known data');
+      setLive(false, 'Connection issue — showing last known data');
       document.getElementById('ledgerBody').innerHTML =
         '<div class="loading-msg">Could not reach the published sheet. Check the publish settings or your connection, then reload.</div>';
     }
