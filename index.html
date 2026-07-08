@@ -60,6 +60,29 @@
     margin:0; text-transform:uppercase; letter-spacing:.01em;
   }
 
+  .featured{
+    background:var(--ink); color:var(--paper);
+    border-radius:20px; padding:30px 30px 26px; position:relative; overflow:hidden;
+  }
+  .featured::before{
+    content:""; position:absolute; top:18px; right:20px; width:16px; height:16px;
+    border-radius:50%; background:var(--edge);
+  }
+  .featured-label{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:.14em;
+    text-transform:uppercase; color:#B9B7AC;
+  }
+  .featured-cohorts{
+    font-family:'Archivo', sans-serif; font-weight:700; font-size:16px;
+    margin-top:4px; color:var(--paper);
+  }
+  .featured-count{
+    font-family:'Archivo', sans-serif; font-weight:800; font-size:72px;
+    line-height:1.05; margin:10px 0 2px; color:var(--paper);
+    font-variant-numeric:tabular-nums;
+  }
+  .featured-sub{ font-size:12px; color:#B9B7AC; }
+
   .table-frame{ border:2px solid var(--ink); border-radius:16px; overflow:hidden; }
   .row{
     display:grid;
@@ -95,6 +118,7 @@
   .bar-fill.accent{ background:var(--cobalt); }
   .num{ font-family:'Archivo', sans-serif; font-weight:700; font-size:14px; width:42px; text-align:right; flex-shrink:0; }
   .num.dash{ color:var(--muted); }
+  .n-count{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--muted); flex-shrink:0; }
 
   .readouts{ display:grid; grid-template-columns:1fr 1fr; gap:20px; }
   .readout{ border:2px solid var(--ink); border-radius:20px; padding:22px 22px 20px; position:relative; }
@@ -133,15 +157,6 @@
     <div class="live-tag" id="liveTag"><span class="dot"></span> <span id="liveText">Connecting…</span></div>
   </div>
 
-  <div class="section-head"><div class="bar"></div><h2>Cohort outcomes</h2></div>
-
-  <div class="table-frame">
-    <div class="row head"><div>Cohort</div><div>Status</div><div>Outcome</div></div>
-    <div class="scroll-body" id="ledgerBody">
-      <div class="loading-msg">Loading cohort data…</div>
-    </div>
-  </div>
-
   <div class="section-head"><div class="bar"></div><h2>Active enrollment</h2></div>
 
   <div class="readouts">
@@ -154,6 +169,24 @@
       <div class="readout-label">Term B</div>
       <div class="readout-count" id="termB">--</div>
       <div class="readout-sub">students currently enrolled</div>
+    </div>
+  </div>
+
+  <div class="section-head"><div class="bar"></div><h2>Combined on-time graduation rate</h2></div>
+
+  <div class="featured">
+    <div class="featured-label">Two most recent completed cohorts</div>
+    <div class="featured-cohorts" id="combinedCohorts">—</div>
+    <div class="featured-count" id="combinedRate">--%</div>
+    <div class="featured-sub" id="combinedSub">Calculated from raw counts, not averaged</div>
+  </div>
+
+  <div class="section-head"><div class="bar"></div><h2>Cohort outcomes</h2></div>
+
+  <div class="table-frame">
+    <div class="row head"><div>Cohort</div><div>Status</div><div>Outcome</div></div>
+    <div class="scroll-body" id="ledgerBody">
+      <div class="loading-msg">Loading cohort data…</div>
     </div>
   </div>
 
@@ -205,6 +238,7 @@
       const pct = has ? value : 0;
       const label = has ? Math.round(value) + '%' : '—';
       const badgeClass = isCompleted ? 'done' : 'wip';
+      const nLabel = (r.n !== null && !isNaN(r.n)) ? `(n = ${r.n})` : '';
 
       const row = document.createElement('div');
       row.className = 'row';
@@ -216,6 +250,7 @@
           <div class="metric">
             <div class="bar-track"><div class="bar-fill ${barClass}" data-pct="${pct}"></div></div>
             <div class="num${has ? '' : ' dash'}">${label}</div>
+            <div class="n-count">${nLabel}</div>
           </div>
         </div>`;
       body.appendChild(row);
@@ -245,9 +280,11 @@
       const idxStatus = findCol(header, 'status');
       const idxOverall = findCol(header, 'overall');
       const idxPersistence = findCol(header, 'persistence');
+      const idxN = findCol(header, 'cohort size');
 
       const cohortRows = [];
       let termA = null, termB = null;
+      let combinedLabel = null, combinedRate = null, combinedN = null;
 
       for(let i = 1; i < parsed.length; i++){
         const row = parsed[i];
@@ -260,12 +297,23 @@
             cohort: label,
             status: statusVal,
             overall: toPercent(row[idxOverall]),
-            persistence: toPercent(row[idxPersistence])
+            persistence: toPercent(row[idxPersistence]),
+            n: idxN > -1 ? parseInt(row[idxN], 10) : null
           });
         } else if(/active a-term/i.test(label)){
           termA = parseInt(row[1], 10);
         } else if(/active b-term/i.test(label)){
           termB = parseInt(row[1], 10);
+        }
+
+        // Combined-cohort stat now lives in columns K/L (index 10/11), separate from the main cohort scan
+        const kLabel = (row[10] || '').toString().trim();
+        if(/combined cohort label/i.test(kLabel)){
+          combinedLabel = (row[11] || '').toString().trim();
+        } else if(/combined on-time graduation rate/i.test(kLabel)){
+          combinedRate = toPercent(row[11]);
+        } else if(/combined n/i.test(kLabel)){
+          combinedN = parseInt(row[11], 10);
         }
       }
 
@@ -274,6 +322,14 @@
       renderLedger(cohortRows);
       countUp(document.getElementById('termA'), termA);
       countUp(document.getElementById('termB'), termB);
+
+      document.getElementById('combinedCohorts').textContent = combinedLabel || '—';
+      document.getElementById('combinedRate').textContent =
+        (combinedRate !== null && !isNaN(combinedRate)) ? Math.round(combinedRate) + '%' : '—';
+      document.getElementById('combinedSub').textContent =
+        (combinedN !== null && !isNaN(combinedN))
+          ? `Calculated from raw counts, not averaged · n = ${combinedN}`
+          : 'Calculated from raw counts, not averaged';
       document.getElementById('lastUpdated').textContent =
         'Last refreshed: ' + new Date().toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
       setLive(true, 'Live · synced with sheet');
