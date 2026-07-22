@@ -6,6 +6,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
 <style>
   :root{
     --paper:#F4F3ED;
@@ -240,8 +242,11 @@
 
   <div class="section-head"><div class="section-head-left"><div class="bar"></div><h2>Ahead program</h2></div></div>
 
-  <div class="ahead-grid" id="aheadGrid">
-    <div class="loading-msg">Loading Ahead data…</div>
+  <div class="table-frame" style="padding:20px 20px 8px;">
+    <div id="aheadLegend" style="display:flex; flex-wrap:wrap; gap:14px; margin-bottom:10px; font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--muted);"></div>
+    <div style="position:relative; width:100%; height:340px;">
+      <canvas id="aheadChart" role="img" aria-label="Grouped bar chart comparing Ahead program outcomes across years">Loading Ahead outcome data.</canvas>
+    </div>
   </div>
 
   <div class="footer">
@@ -379,30 +384,50 @@
     renderLedger(latestCohortRows, currentFilter);
   });
 
+  const YEAR_COLORS = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#4a3aa7'];
+  let aheadChartInstance = null;
+
   function renderAhead(years){
-    const grid = document.getElementById('aheadGrid');
-    grid.innerHTML = '';
-    if(years.length === 0){
-      grid.innerHTML = '<div class="loading-msg">No Ahead cohort years found.</div>';
+    const withData = years.filter(y => y.totalN !== null && y.totalN !== undefined && !isNaN(y.totalN));
+    const legendEl = document.getElementById('aheadLegend');
+    legendEl.innerHTML = withData.map((y, i) =>
+      `<span style="display:flex; align-items:center; gap:6px;"><span style="width:10px; height:10px; border-radius:2px; background:${YEAR_COLORS[i % YEAR_COLORS.length]};"></span>${y.year}</span>`
+    ).join('');
+
+    if(withData.length === 0){
+      document.getElementById('aheadChart').parentElement.innerHTML = '<div class="loading-msg">No Ahead cohort years with data yet.</div>';
       return;
     }
-    years.forEach(y => {
-      const fmt = (num, pct) => {
-        const n = (num !== null && !isNaN(num)) ? num : '—';
-        const p = (pct !== null && pct !== undefined && !isNaN(pct)) ? Math.round(pct) + '%' : '—';
-        return `${n} (${p})`;
-      };
-      const card = document.createElement('div');
-      card.className = 'ahead-card';
-      card.innerHTML = `
-        <div class="ahead-year">${y.year}</div>
-        <div class="ahead-stat"><span class="ahead-stat-label">Total students (active + former)</span><span class="ahead-stat-value">${y.totalN ?? '—'}</span></div>
-        <div class="ahead-stat"><span class="ahead-stat-label">Former Ahead (n)</span><span class="ahead-stat-value">${y.formerN ?? '—'}</span></div>
-        <div class="ahead-stat"><span class="ahead-stat-label">Earned degree during HS</span><span class="ahead-stat-value">${fmt(y.degreeNum, y.degreePct)}</span></div>
-        <div class="ahead-stat"><span class="ahead-stat-label">Stayed on to become A-Core</span><span class="ahead-stat-value">${fmt(y.stayedNum, y.stayedPct)}</span></div>
-        <div class="ahead-stat"><span class="ahead-stat-label">Persistence of A-Core</span><span class="ahead-stat-value">${fmt(y.persistNum, y.persistPct)}</span></div>
-        <div class="ahead-stat"><span class="ahead-stat-label">On-time grad of A-Core</span><span class="ahead-stat-value">${fmt(y.gradNum, y.gradPct)}</span></div>`;
-      grid.appendChild(card);
+
+    const labels = ['Earned degree', 'Stayed on to A-Core', 'Persistence of A-Core', 'On-time grad of A-Core'];
+    const datasets = withData.map((y, i) => ({
+      label: y.year,
+      data: [y.degreePct, y.stayedPct, y.persistPct, y.gradPct].map(v => (v === null || isNaN(v)) ? 0 : Math.round(v)),
+      backgroundColor: YEAR_COLORS[i % YEAR_COLORS.length],
+      borderRadius: 4
+    }));
+
+    if(aheadChartInstance) aheadChartInstance.destroy();
+    aheadChartInstance = new Chart(document.getElementById('aheadChart'), {
+      type: 'bar',
+      data: { labels, datasets },
+      plugins: [ChartDataLabels],
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: (ctx) => ctx.dataset.label + ': ' + ctx.parsed.y + '%' } },
+          datalabels: {
+            anchor: 'end', align: 'top', offset: 2,
+            color: '#14161A', font: { family: 'IBM Plex Mono', size: 10, weight: '600' },
+            formatter: (v) => v + '%'
+          }
+        },
+        scales: {
+          y: { min: 0, max: 100, ticks: { callback: (v) => v + '%' }, grid: { color: '#E7E4D8' } },
+          x: { grid: { display: false }, ticks: { autoSkip: false, maxRotation: 20 } }
+        }
+      }
     });
   }
 
