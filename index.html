@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>College Together — Student Outcomes</title>
+<title>College Together — Data Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
@@ -25,7 +25,7 @@
     font-family:'Inter', sans-serif;
     min-height:100vh;
   }
-  .wrap{max-width:920px; margin:0 auto; padding:0 28px 60px;}
+  .wrap{max-width:960px; margin:0 auto; padding:0 28px 60px;}
 
   .masthead{
     display:flex; justify-content:space-between; align-items:flex-end;
@@ -53,12 +53,21 @@
   @keyframes blink{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
   .live-tag:not(.error) .dot{ animation:blink 1.8s infinite; }
 
-  .section-head{ display:flex; align-items:center; gap:10px; margin:44px 0 16px; }
+  .section-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:44px 0 16px; flex-wrap:wrap; }
+  .section-head-left{ display:flex; align-items:center; gap:10px; }
   .section-head .bar{ width:7px; height:22px; background:var(--cobalt); border-radius:4px; }
   .section-head h2{
     font-family:'Archivo', sans-serif; font-weight:700; font-size:19px;
     margin:0; text-transform:uppercase; letter-spacing:.01em;
   }
+
+  .toggle-group{ display:flex; gap:6px; }
+  .toggle-btn{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:.06em; text-transform:uppercase;
+    padding:6px 14px; border-radius:20px; border:2px solid var(--ink); background:transparent;
+    color:var(--ink); cursor:pointer; transition:background .15s, color .15s;
+  }
+  .toggle-btn.active{ background:var(--ink); color:var(--paper); }
 
   .featured{
     background:var(--ink); color:var(--paper);
@@ -82,6 +91,7 @@
     font-variant-numeric:tabular-nums;
   }
   .featured-sub{ font-size:12px; color:#B9B7AC; }
+  .featured-grid{ display:grid; grid-template-columns:1fr 1fr; gap:20px; }
 
   .table-frame{ border:2px solid var(--ink); border-radius:16px; overflow:hidden; }
   .row{
@@ -120,15 +130,23 @@
   .num.dash{ color:var(--muted); }
   .n-count{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--muted); flex-shrink:0; }
 
-  .readouts{ display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  .readouts{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; }
   .readout{ border:2px solid var(--ink); border-radius:20px; padding:22px 22px 20px; position:relative; }
   .readout::before{ content:""; position:absolute; top:16px; right:16px; width:14px; height:14px; border-radius:50%; background:var(--edge); }
   .readout-label{ font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); }
   .readout-count{
-    font-family:'Archivo', sans-serif; font-weight:800; font-size:56px;
+    font-family:'Archivo', sans-serif; font-weight:800; font-size:48px;
     line-height:1.1; margin:8px 0 2px; font-variant-numeric:tabular-nums;
   }
   .readout-sub{ font-size:12px; color:var(--muted); }
+
+  .ahead-grid{ display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  .ahead-card{ border:2px solid var(--ink); border-radius:20px; padding:22px; }
+  .ahead-year{ font-family:'Archivo', sans-serif; font-weight:800; font-size:20px; margin-bottom:14px; }
+  .ahead-stat{ display:flex; justify-content:space-between; align-items:baseline; padding:7px 0; border-bottom:1px solid var(--line); gap:10px; }
+  .ahead-stat:last-child{ border-bottom:none; }
+  .ahead-stat-label{ font-size:12px; color:var(--muted); }
+  .ahead-stat-value{ font-family:'IBM Plex Mono', monospace; font-weight:600; font-size:13px; text-align:right; white-space:nowrap; }
 
   .footer{
     margin-top:48px; padding-top:14px; border-top:2px solid var(--ink);
@@ -142,7 +160,9 @@
     h1{font-size:30px;}
     .row{grid-template-columns:96px 90px 1fr; padding:12px;}
     .readouts{grid-template-columns:1fr;}
-    .readout-count{font-size:44px;}
+    .readout-count{font-size:40px;}
+    .featured-grid{grid-template-columns:1fr;}
+    .ahead-grid{grid-template-columns:1fr;}
   }
 </style>
 </head>
@@ -152,12 +172,12 @@
   <div class="masthead">
     <div>
       <div class="wordmark">College Together</div>
-      <h1>Student Outcomes</h1>
+      <h1>Data Dashboard</h1>
     </div>
     <div class="live-tag" id="liveTag"><span class="dot"></span> <span id="liveText">Connecting…</span></div>
   </div>
 
-  <div class="section-head"><div class="bar"></div><h2>Active enrollment</h2></div>
+  <div class="section-head"><div class="section-head-left"><div class="bar"></div><h2>Active enrollment</h2></div></div>
 
   <div class="readouts">
     <div class="readout">
@@ -170,24 +190,50 @@
       <div class="readout-count" id="termB">--</div>
       <div class="readout-sub">students currently enrolled</div>
     </div>
+    <div class="readout">
+      <div class="readout-label">Ahead</div>
+      <div class="readout-count" id="termAhead">--</div>
+      <div class="readout-sub">students currently active</div>
+    </div>
   </div>
 
-  <div class="section-head"><div class="bar"></div><h2>Combined on-time graduation rate</h2></div>
+  <div class="section-head"><div class="section-head-left"><div class="bar"></div><h2>Combined on-time graduation rate</h2></div></div>
 
-  <div class="featured">
-    <div class="featured-label">Two most recent completed cohorts</div>
-    <div class="featured-cohorts" id="combinedCohorts">—</div>
-    <div class="featured-count" id="combinedRate">--%</div>
-    <div class="featured-sub" id="combinedSub">n = —</div>
+  <div class="featured-grid">
+    <div class="featured">
+      <div class="featured-label">Two most recent completed cohorts</div>
+      <div class="featured-cohorts" id="combinedCohorts">—</div>
+      <div class="featured-count" id="combinedRate">--%</div>
+      <div class="featured-sub" id="combinedSub">n = —</div>
+    </div>
+    <div class="featured">
+      <div class="featured-label">All currently active cohorts, pooled</div>
+      <div class="featured-cohorts">Persistence rate</div>
+      <div class="featured-count" id="pooledRate">--%</div>
+      <div class="featured-sub" id="pooledSub">n = —</div>
+    </div>
   </div>
 
-  <div class="section-head"><div class="bar"></div><h2>Cohort outcomes</h2></div>
+  <div class="section-head">
+    <div class="section-head-left"><div class="bar"></div><h2>Cohort outcomes</h2></div>
+    <div class="toggle-group" id="toggleGroup">
+      <button class="toggle-btn active" data-filter="all">All</button>
+      <button class="toggle-btn" data-filter="core">Core</button>
+      <button class="toggle-btn" data-filter="flex">Flex</button>
+    </div>
+  </div>
 
   <div class="table-frame">
     <div class="row head"><div>Cohort</div><div>Status</div><div>Outcome</div></div>
     <div class="scroll-body" id="ledgerBody">
       <div class="loading-msg">Loading cohort data…</div>
     </div>
+  </div>
+
+  <div class="section-head"><div class="section-head-left"><div class="bar"></div><h2>Ahead program</h2></div></div>
+
+  <div class="ahead-grid" id="aheadGrid">
+    <div class="loading-msg">Loading Ahead data…</div>
   </div>
 
   <div class="footer">
@@ -201,6 +247,9 @@
   const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSoNeqDEspmMSvQW7IRh-jdluV5KG-uD21Zo5svK4ufi-aYXJShG5OB6fqw-Adg7a-mQ-8GhgsixYTf/pub?gid=2062460542&single=true&output=csv";
   const REFRESH_MS = 5 * 60 * 1000;
 
+  let currentFilter = 'all';
+  let latestCohortRows = [];
+
   function toPercent(raw){
     if(raw === undefined || raw === null) return null;
     const cleaned = String(raw).replace('%','').trim();
@@ -208,6 +257,14 @@
     const v = parseFloat(cleaned);
     if(isNaN(v)) return null;
     return v <= 1 ? v * 100 : v;
+  }
+
+  function toInt(raw){
+    if(raw === undefined || raw === null) return null;
+    const cleaned = String(raw).replace(/[^0-9.-]/g,'').trim();
+    if(cleaned === '') return null;
+    const v = parseInt(cleaned, 10);
+    return isNaN(v) ? null : v;
   }
 
   function findCol(header, keyword){
@@ -226,19 +283,41 @@
     requestAnimationFrame(tick);
   }
 
-  function renderLedger(rows){
+  function pickMetric(r, filter){
+    const isCompleted = r.status === 'Completed';
+    if(filter === 'core'){
+      return {
+        value: isCompleted ? r.coreGrad : r.corePersist,
+        caption: isCompleted ? 'Core on-time graduation rate' : 'Core persistence rate',
+        n: r.coreN
+      };
+    }
+    if(filter === 'flex'){
+      return {
+        value: isCompleted ? r.flexGrad : r.flexPersist,
+        caption: isCompleted ? 'Flex on-time graduation rate' : 'Flex persistence rate',
+        n: r.flexN
+      };
+    }
+    return {
+      value: isCompleted ? r.overall : r.persistence,
+      caption: isCompleted ? 'On-time graduation rate' : 'Persistence rate',
+      n: r.n
+    };
+  }
+
+  function renderLedger(rows, filter){
     const body = document.getElementById('ledgerBody');
     body.innerHTML = '';
     rows.forEach(r => {
       const isCompleted = r.status === 'Completed';
-      const value = isCompleted ? r.overall : r.persistence;
-      const caption = isCompleted ? 'On-time graduation rate' : 'Persistence rate';
+      const m = pickMetric(r, filter);
       const barClass = isCompleted ? '' : 'accent';
-      const has = value !== null;
-      const pct = has ? value : 0;
-      const label = has ? Math.round(value) + '%' : '—';
+      const has = m.value !== null && m.value !== undefined && !isNaN(m.value);
+      const pct = has ? m.value : 0;
+      const label = has ? Math.round(m.value) + '%' : '—';
       const badgeClass = isCompleted ? 'done' : 'wip';
-      const nLabel = (r.n !== null && !isNaN(r.n)) ? `(n = ${r.n})` : '';
+      const nLabel = (m.n !== null && m.n !== undefined && !isNaN(m.n)) ? `(n = ${m.n})` : '';
 
       const row = document.createElement('div');
       row.className = 'row';
@@ -246,7 +325,7 @@
         <div class="cohort">${r.cohort}</div>
         <div><span class="badge ${badgeClass}">${r.status}</span></div>
         <div class="metric-wrap">
-          <div class="metric-caption">${caption}</div>
+          <div class="metric-caption">${m.caption}</div>
           <div class="metric">
             <div class="bar-track"><div class="bar-fill ${barClass}" data-pct="${pct}"></div></div>
             <div class="num${has ? '' : ' dash'}">${label}</div>
@@ -257,8 +336,43 @@
     });
     requestAnimationFrame(() => {
       setTimeout(() => {
-        document.querySelectorAll('.bar-fill').forEach(b => b.style.width = b.dataset.pct + '%');
+        document.querySelectorAll('#ledgerBody .bar-fill').forEach(b => b.style.width = b.dataset.pct + '%');
       }, 80);
+    });
+  }
+
+  document.getElementById('toggleGroup').addEventListener('click', (e) => {
+    const btn = e.target.closest('.toggle-btn');
+    if(!btn) return;
+    currentFilter = btn.dataset.filter;
+    document.querySelectorAll('.toggle-btn').forEach(b => b.classList.toggle('active', b === btn));
+    renderLedger(latestCohortRows, currentFilter);
+  });
+
+  function renderAhead(years){
+    const grid = document.getElementById('aheadGrid');
+    grid.innerHTML = '';
+    if(years.length === 0){
+      grid.innerHTML = '<div class="loading-msg">No Ahead cohort years found.</div>';
+      return;
+    }
+    years.forEach(y => {
+      const fmt = (num, pct) => {
+        const n = (num !== null && !isNaN(num)) ? num : '—';
+        const p = (pct !== null && pct !== undefined && !isNaN(pct)) ? Math.round(pct) + '%' : '—';
+        return `${n} (${p})`;
+      };
+      const card = document.createElement('div');
+      card.className = 'ahead-card';
+      card.innerHTML = `
+        <div class="ahead-year">${y.year}</div>
+        <div class="ahead-stat"><span class="ahead-stat-label">Total students (active + former)</span><span class="ahead-stat-value">${y.totalN ?? '—'}</span></div>
+        <div class="ahead-stat"><span class="ahead-stat-label">Former Ahead (n)</span><span class="ahead-stat-value">${y.formerN ?? '—'}</span></div>
+        <div class="ahead-stat"><span class="ahead-stat-label">Earned degree during HS</span><span class="ahead-stat-value">${fmt(y.degreeNum, y.degreePct)}</span></div>
+        <div class="ahead-stat"><span class="ahead-stat-label">Stayed on to become A-Core</span><span class="ahead-stat-value">${fmt(y.stayedNum, y.stayedPct)}</span></div>
+        <div class="ahead-stat"><span class="ahead-stat-label">Persistence of A-Core</span><span class="ahead-stat-value">${fmt(y.persistNum, y.persistPct)}</span></div>
+        <div class="ahead-stat"><span class="ahead-stat-label">On-time grad of A-Core</span><span class="ahead-stat-value">${fmt(y.gradNum, y.gradPct)}</span></div>`;
+      grid.appendChild(card);
     });
   }
 
@@ -279,12 +393,21 @@
       const header = parsed[0].map(h => (h||'').toString().trim());
       const idxStatus = findCol(header, 'status');
       const idxOverall = findCol(header, 'overall');
-      const idxPersistence = findCol(header, 'persistence');
+      const idxPersistence = findCol(header, 'persistence rate (graduated');
       const idxN = findCol(header, 'cohort size');
+      const idxCoreGrad = findCol(header, 'core on-time');
+      const idxFlexGrad = findCol(header, 'flex on-time');
+      const idxCoreN = findCol(header, 'core n');
+      const idxFlexN = findCol(header, 'flex n');
+      const idxCorePersist = findCol(header, 'core persistence');
+      const idxFlexPersist = findCol(header, 'flex persistence');
+      const idxAheadYearAnchor = findCol(header, 'ahead year');
 
       const cohortRows = [];
-      let termA = null, termB = null;
+      const aheadYears = [];
+      let termA = null, termB = null, termAhead = null;
       let combinedLabel = null, combinedRate = null, combinedN = null;
+      let pooledRate = null, pooledN = null;
 
       for(let i = 1; i < parsed.length; i++){
         const row = parsed[i];
@@ -298,38 +421,77 @@
             status: statusVal,
             overall: toPercent(row[idxOverall]),
             persistence: toPercent(row[idxPersistence]),
-            n: idxN > -1 ? parseInt(row[idxN], 10) : null
+            n: idxN > -1 ? toInt(row[idxN]) : null,
+            coreGrad: idxCoreGrad > -1 ? toPercent(row[idxCoreGrad]) : null,
+            flexGrad: idxFlexGrad > -1 ? toPercent(row[idxFlexGrad]) : null,
+            coreN: idxCoreN > -1 ? toInt(row[idxCoreN]) : null,
+            flexN: idxFlexN > -1 ? toInt(row[idxFlexN]) : null,
+            corePersist: idxCorePersist > -1 ? toPercent(row[idxCorePersist]) : null,
+            flexPersist: idxFlexPersist > -1 ? toPercent(row[idxFlexPersist]) : null
           });
         } else if(/active a-term/i.test(label)){
-          termA = parseInt(row[1], 10);
+          termA = toInt(row[1]);
         } else if(/active b-term/i.test(label)){
-          termB = parseInt(row[1], 10);
+          termB = toInt(row[1]);
+        } else if(/active ahead/i.test(label)){
+          termAhead = toInt(row[1]);
         }
 
-        // Combined-cohort stat now lives in columns K/L (index 10/11), separate from the main cohort scan
+        // Combined + pooled stats live in column K/L (index 10/11)
         const kLabel = (row[10] || '').toString().trim();
         if(/combined cohort label/i.test(kLabel)){
           combinedLabel = (row[11] || '').toString().trim();
         } else if(/combined on-time graduation rate/i.test(kLabel)){
           combinedRate = toPercent(row[11]);
         } else if(/combined n/i.test(kLabel)){
-          combinedN = parseInt(row[11], 10);
+          combinedN = toInt(row[11]);
+        } else if(/persistence rate/i.test(kLabel)){
+          pooledRate = toPercent(row[11]);
+        } else if(/^n$/i.test(kLabel)){
+          pooledN = toInt(row[11]);
+        }
+
+        // Ahead year block — fixed column offsets from the "Ahead Year" anchor column
+        if(idxAheadYearAnchor > -1){
+          const yearLabel = (row[idxAheadYearAnchor] || '').toString().trim();
+          if(yearLabel){
+            aheadYears.push({
+              year: yearLabel,
+              totalN: toInt(row[idxAheadYearAnchor+1]),
+              formerN: toInt(row[idxAheadYearAnchor+2]),
+              degreeNum: toInt(row[idxAheadYearAnchor+3]),
+              degreePct: toPercent(row[idxAheadYearAnchor+4]),
+              stayedNum: toInt(row[idxAheadYearAnchor+5]),
+              stayedPct: toPercent(row[idxAheadYearAnchor+6]),
+              persistNum: toInt(row[idxAheadYearAnchor+7]),
+              persistPct: toPercent(row[idxAheadYearAnchor+8]),
+              gradNum: toInt(row[idxAheadYearAnchor+9]),
+              gradPct: toPercent(row[idxAheadYearAnchor+10])
+            });
+          }
         }
       }
 
       if(cohortRows.length === 0) throw new Error('No cohort rows found — check Dashboard tab headers');
 
-      renderLedger(cohortRows);
+      latestCohortRows = cohortRows;
+      renderLedger(cohortRows, currentFilter);
+      renderAhead(aheadYears);
       countUp(document.getElementById('termA'), termA);
       countUp(document.getElementById('termB'), termB);
+      countUp(document.getElementById('termAhead'), termAhead);
 
       document.getElementById('combinedCohorts').textContent = combinedLabel || '—';
       document.getElementById('combinedRate').textContent =
         (combinedRate !== null && !isNaN(combinedRate)) ? Math.round(combinedRate) + '%' : '—';
       document.getElementById('combinedSub').textContent =
-        (combinedN !== null && !isNaN(combinedN))
-          ? `n = ${combinedN}`
-          : 'n = —';
+        (combinedN !== null && !isNaN(combinedN)) ? `n = ${combinedN}` : 'n = —';
+
+      document.getElementById('pooledRate').textContent =
+        (pooledRate !== null && !isNaN(pooledRate)) ? Math.round(pooledRate) + '%' : '—';
+      document.getElementById('pooledSub').textContent =
+        (pooledN !== null && !isNaN(pooledN)) ? `n = ${pooledN}` : 'n = —';
+
       document.getElementById('lastUpdated').textContent =
         'Last refreshed: ' + new Date().toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
       setLive(true, 'Live · synced with sheet');
