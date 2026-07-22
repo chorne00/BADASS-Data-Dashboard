@@ -271,6 +271,13 @@
     return header.findIndex(h => (h||'').toString().toLowerCase().includes(keyword));
   }
 
+  function findColAll(header, keywords){
+    return header.findIndex(h => {
+      const t = (h||'').toString().toLowerCase();
+      return keywords.every(k => t.includes(k));
+    });
+  }
+
   function countUp(el, target, duration=1100){
     if(target === null || isNaN(target)){ el.textContent = "—"; return; }
     const start = performance.now();
@@ -401,7 +408,17 @@
       const idxFlexN = findCol(header, 'flex n');
       const idxCorePersist = findCol(header, 'core persistence');
       const idxFlexPersist = findCol(header, 'flex persistence');
-      const idxAheadYearAnchor = findCol(header, 'ahead year');
+      const idxAheadYear = findCol(header, 'ahead year');
+      const idxTotalN = findCol(header, 'total n');
+      const idxFormerN = findCol(header, 'former ahead');
+      const idxDegreeNum = findColAll(header, ['degree', '(#)']);
+      const idxDegreePct = findColAll(header, ['degree', '(%)']);
+      const idxStayedNum = findColAll(header, ['stayed on', '(#)']);
+      const idxStayedPct = findColAll(header, ['stayed on', '(%)']);
+      const idxPersistNum = findColAll(header, ['persistence', 'a-core', '(#)']);
+      const idxPersistPct = findColAll(header, ['persistence', 'a-core', '(%)']);
+      const idxGradNum = findColAll(header, ['on-time grad', 'a-core', '(#)']);
+      const idxGradPct = findColAll(header, ['on-time grad', 'a-core', '(%)']);
 
       const cohortRows = [];
       const aheadYears = [];
@@ -451,22 +468,22 @@
           pooledN = toInt(row[11]);
         }
 
-        // Ahead year block — fixed column offsets from the "Ahead Year" anchor column
-        if(idxAheadYearAnchor > -1){
-          const yearLabel = (row[idxAheadYearAnchor] || '').toString().trim();
+        // Ahead year block — every value now found by its own header keyword, not by position
+        if(idxAheadYear > -1){
+          const yearLabel = (row[idxAheadYear] || '').toString().trim();
           if(yearLabel){
             aheadYears.push({
               year: yearLabel,
-              totalN: toInt(row[idxAheadYearAnchor+1]),
-              formerN: toInt(row[idxAheadYearAnchor+2]),
-              degreeNum: toInt(row[idxAheadYearAnchor+3]),
-              degreePct: toPercent(row[idxAheadYearAnchor+4]),
-              stayedNum: toInt(row[idxAheadYearAnchor+5]),
-              stayedPct: toPercent(row[idxAheadYearAnchor+6]),
-              persistNum: toInt(row[idxAheadYearAnchor+7]),
-              persistPct: toPercent(row[idxAheadYearAnchor+8]),
-              gradNum: toInt(row[idxAheadYearAnchor+9]),
-              gradPct: toPercent(row[idxAheadYearAnchor+10])
+              totalN: idxTotalN > -1 ? toInt(row[idxTotalN]) : null,
+              formerN: idxFormerN > -1 ? toInt(row[idxFormerN]) : null,
+              degreeNum: idxDegreeNum > -1 ? toInt(row[idxDegreeNum]) : null,
+              degreePct: idxDegreePct > -1 ? toPercent(row[idxDegreePct]) : null,
+              stayedNum: idxStayedNum > -1 ? toInt(row[idxStayedNum]) : null,
+              stayedPct: idxStayedPct > -1 ? toPercent(row[idxStayedPct]) : null,
+              persistNum: idxPersistNum > -1 ? toInt(row[idxPersistNum]) : null,
+              persistPct: idxPersistPct > -1 ? toPercent(row[idxPersistPct]) : null,
+              gradNum: idxGradNum > -1 ? toInt(row[idxGradNum]) : null,
+              gradPct: idxGradPct > -1 ? toPercent(row[idxGradPct]) : null
             });
           }
         }
