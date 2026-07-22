@@ -130,6 +130,11 @@
   .num.dash{ color:var(--muted); }
   .n-count{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--muted); flex-shrink:0; }
 
+  .compare-wrap{ display:flex; gap:18px; width:100%; }
+  .compare-col{ flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; }
+  .compare-col + .compare-col{ border-left:1px solid var(--line); padding-left:18px; }
+  .compare-tag{ font-family:'Archivo', sans-serif; font-weight:700; font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--cobalt); }
+
   .readouts{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; }
   .readout{ border:2px solid var(--ink); border-radius:20px; padding:22px 22px 20px; position:relative; }
   .readout::before{ content:""; position:absolute; top:16px; right:16px; width:14px; height:14px; border-radius:50%; background:var(--edge); }
@@ -163,6 +168,8 @@
     .readout-count{font-size:40px;}
     .featured-grid{grid-template-columns:1fr;}
     .ahead-grid{grid-template-columns:1fr;}
+    .compare-wrap{flex-direction:column; gap:12px;}
+    .compare-col + .compare-col{border-left:none; padding-left:0; border-top:1px solid var(--line); padding-top:10px;}
   }
 </style>
 </head>
@@ -220,6 +227,7 @@
       <button class="toggle-btn active" data-filter="all">All</button>
       <button class="toggle-btn" data-filter="core">Core</button>
       <button class="toggle-btn" data-filter="flex">Flex</button>
+      <button class="toggle-btn" data-filter="compare">Compare</button>
     </div>
   </div>
 
@@ -313,32 +321,47 @@
     };
   }
 
+  function buildMetricHTML(m, isCompleted){
+    const barClass = isCompleted ? '' : 'accent';
+    const has = m.value !== null && m.value !== undefined && !isNaN(m.value);
+    const pct = has ? m.value : 0;
+    const label = has ? Math.round(m.value) + '%' : '—';
+    const nLabel = (m.n !== null && m.n !== undefined && !isNaN(m.n)) ? `(n = ${m.n})` : '';
+    return `
+      <div class="metric-caption">${m.caption}</div>
+      <div class="metric">
+        <div class="bar-track"><div class="bar-fill ${barClass}" data-pct="${pct}"></div></div>
+        <div class="num${has ? '' : ' dash'}">${label}</div>
+        <div class="n-count">${nLabel}</div>
+      </div>`;
+  }
+
   function renderLedger(rows, filter){
     const body = document.getElementById('ledgerBody');
     body.innerHTML = '';
     rows.forEach(r => {
       const isCompleted = r.status === 'Completed';
-      const m = pickMetric(r, filter);
-      const barClass = isCompleted ? '' : 'accent';
-      const has = m.value !== null && m.value !== undefined && !isNaN(m.value);
-      const pct = has ? m.value : 0;
-      const label = has ? Math.round(m.value) + '%' : '—';
       const badgeClass = isCompleted ? 'done' : 'wip';
-      const nLabel = (m.n !== null && m.n !== undefined && !isNaN(m.n)) ? `(n = ${m.n})` : '';
-
       const row = document.createElement('div');
       row.className = 'row';
-      row.innerHTML = `
-        <div class="cohort">${r.cohort}</div>
-        <div><span class="badge ${badgeClass}">${r.status}</span></div>
-        <div class="metric-wrap">
-          <div class="metric-caption">${m.caption}</div>
-          <div class="metric">
-            <div class="bar-track"><div class="bar-fill ${barClass}" data-pct="${pct}"></div></div>
-            <div class="num${has ? '' : ' dash'}">${label}</div>
-            <div class="n-count">${nLabel}</div>
-          </div>
-        </div>`;
+
+      if(filter === 'compare'){
+        const coreM = pickMetric(r, 'core');
+        const flexM = pickMetric(r, 'flex');
+        row.innerHTML = `
+          <div class="cohort">${r.cohort}</div>
+          <div><span class="badge ${badgeClass}">${r.status}</span></div>
+          <div class="compare-wrap">
+            <div class="compare-col"><div class="compare-tag">Core</div>${buildMetricHTML(coreM, isCompleted)}</div>
+            <div class="compare-col"><div class="compare-tag">Flex</div>${buildMetricHTML(flexM, isCompleted)}</div>
+          </div>`;
+      } else {
+        const m = pickMetric(r, filter);
+        row.innerHTML = `
+          <div class="cohort">${r.cohort}</div>
+          <div><span class="badge ${badgeClass}">${r.status}</span></div>
+          <div class="metric-wrap">${buildMetricHTML(m, isCompleted)}</div>`;
+      }
       body.appendChild(row);
     });
     requestAnimationFrame(() => {
