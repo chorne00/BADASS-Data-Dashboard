@@ -186,7 +186,7 @@
     <div class="live-tag" id="liveTag"><span class="dot"></span> <span id="liveText">Connecting…</span></div>
   </div>
 
-  <div class="section-head"><div class="section-head-left"><div class="bar"></div><h2>Active enrollment</h2></div></div>
+  <div class="section-head"><div class="section-head-left"><div class="bar"></div><h2>Current enrollment</h2></div></div>
 
   <div class="readouts">
     <div class="readout">
@@ -399,7 +399,7 @@
       return;
     }
 
-    const labels = ['Earned degree', 'Stayed on to A-Core', 'Persistence of A-Core', 'On-time grad of A-Core'];
+    const labels = ['Earned degree', 'Stayed on to A-Core', 'A-Core: Active or On-Time Grads', 'A-Core: On-Time Grads Only'];
     const datasets = withData.map((y, i) => ({
       label: y.year,
       data: [y.degreePct, y.stayedPct, y.persistPct, y.gradPct].map(v => (v === null || isNaN(v)) ? 0 : Math.round(v)),
@@ -463,8 +463,8 @@
       const idxDegreePct = findColAll(header, ['degree', '(%)']);
       const idxStayedNum = findColAll(header, ['stayed on', '(#)']);
       const idxStayedPct = findColAll(header, ['stayed on', '(%)']);
-      const idxPersistNum = findColAll(header, ['persistence', 'a-core', '(#)']);
-      const idxPersistPct = findColAll(header, ['persistence', 'a-core', '(%)']);
+      const idxPersistNum = findColAll(header, ['active or on-time grads', '(#)']);
+      const idxPersistPct = findColAll(header, ['active or on-time grads', '(%)']);
       const idxGradNum = findColAll(header, ['on-time grad', 'a-core', '(#)']);
       const idxGradPct = findColAll(header, ['on-time grad', 'a-core', '(%)']);
 
