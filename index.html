@@ -399,7 +399,7 @@
       return;
     }
 
-    const labels = ['Earned degree', 'Stayed on to A-Core', 'A-Core: Active or On-Time Grads', 'A-Core: On-Time Grads Only'];
+    const labels = ['Earned degree', 'Stayed on to A-Core', 'A-Core: Persistence + Grads', 'A-Core: On-Time Grads Only'];
     const datasets = withData.map((y, i) => ({
       label: y.year,
       data: [y.degreePct, y.stayedPct, y.persistPct, y.gradPct].map(v => (v === null || isNaN(v)) ? 0 : Math.round(v)),
@@ -463,8 +463,8 @@
       const idxDegreePct = findColAll(header, ['degree', '(%)']);
       const idxStayedNum = findColAll(header, ['stayed on', '(#)']);
       const idxStayedPct = findColAll(header, ['stayed on', '(%)']);
-      const idxPersistNum = findColAll(header, ['active or on-time grads', '(#)']);
-      const idxPersistPct = findColAll(header, ['active or on-time grads', '(%)']);
+      const idxPersistNum = findColAll(header, ['persistence + grads', '(#)']);
+      const idxPersistPct = findColAll(header, ['persistence + grads', '(%)']);
       const idxGradNum = findColAll(header, ['on-time grad', 'a-core', '(#)']);
       const idxGradPct = findColAll(header, ['on-time grad', 'a-core', '(%)']);
 
