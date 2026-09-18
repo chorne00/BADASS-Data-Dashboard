@@ -84,13 +84,9 @@
     content:""; position:absolute; top:18px; right:20px; width:16px; height:16px;
     border-radius:50%; background:var(--edge);
   }
-  .featured.accent-edge{ background:var(--edge); }
-  .featured.accent-edge::before{ background:var(--ink); }
-  .featured.accent-edge .featured-label{ color:rgba(255,255,255,.78); }
-  .featured.accent-edge .featured-sub{ color:rgba(255,255,255,.78); }
   .featured-label{
     font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:.14em;
-    text-transform:uppercase; color:#B9B7AC;
+    text-transform:uppercase; color:#B9B7AC; margin-top:4px;
   }
   .featured-cohorts{
     font-family:'Archivo', sans-serif; font-weight:700; font-size:16px;
@@ -115,13 +111,6 @@
     font-family:'Archivo', sans-serif; font-weight:700; font-size:11px;
     text-transform:uppercase; letter-spacing:.04em; color:var(--ink); margin-right:5px;
   }
-  .def-swatch{
-    display:inline-block; width:9px; height:9px; border-radius:2px;
-    margin:0 6px 0 0; vertical-align:middle;
-  }
-  .def-swatch.ink{ background:var(--ink); }
-  .def-swatch.cobalt{ background:var(--cobalt); }
-
   .table-frame{ border:2px solid var(--ink); border-radius:16px; overflow:hidden; }
   .row{
     display:grid;
@@ -214,7 +203,7 @@
     <div class="live-tag" id="liveTag"><span class="dot"></span> <span id="liveText">Connecting…</span></div>
   </div>
 
-  <p class="dashboard-desc">Live enrollment, on-time graduation, and persistence outcomes across College Together's SNHU-partnered cohorts, refreshed automatically from our student records roughly every five minutes.</p>
+  <p class="dashboard-desc">Live enrollment, on-time graduation, and persistence outcomes across College Together's SNHU-partnered cohorts.</p>
 
   <div class="section-head"><div class="section-head-left"><div class="bar"></div><h2>Current enrollment</h2></div></div>
 
@@ -222,7 +211,7 @@
     <div class="readout">
       <div class="readout-label">Term A</div>
       <div class="readout-count" id="termA">--</div>
-      <div class="readout-sub">students currently enrolled</div>
+      <div class="readout-sub">students currently enrolled (includes Ahead)</div>
     </div>
     <div class="readout">
       <div class="readout-label">Term B</div>
@@ -236,32 +225,32 @@
     </div>
   </div>
 
-  <div class="section-head"><div class="section-head-left"><div class="bar"></div><h2>Combined on-time graduation rate</h2></div></div>
+  <div class="section-head"><div class="section-head-left"><div class="bar"></div><h2>Graduation and Persistence Rates</h2></div></div>
 
   <div class="featured-grid cols-3">
     <div class="featured">
-      <div class="featured-label">Two most recent completed cohorts</div>
       <div class="featured-cohorts" id="combinedCohorts">—</div>
+      <div class="featured-label">Two most recently completed cohorts</div>
       <div class="featured-count" id="combinedRate">--%</div>
       <div class="featured-sub" id="combinedSub">n = —</div>
     </div>
     <div class="featured">
-      <div class="featured-label">All currently active cohorts, pooled</div>
       <div class="featured-cohorts">Persistence rate</div>
+      <div class="featured-label">All in-progress cohorts, pooled</div>
       <div class="featured-count" id="pooledRate">--%</div>
       <div class="featured-sub" id="pooledSub">n = —</div>
     </div>
-    <div class="featured accent-edge">
+    <div class="featured">
+      <div class="featured-cohorts">Overall Graduation Rate</div>
       <div class="featured-label">All finalized cohorts</div>
-      <div class="featured-cohorts" id="allTimeCohorts">—</div>
       <div class="featured-count" id="allTimeRate">--%</div>
       <div class="featured-sub" id="allTimeSub">n = —</div>
     </div>
   </div>
 
   <div class="def-row">
-    <div class="def-item"><span class="def-term">On-time graduation</span><span class="def-swatch ink"></span>completed within 3 years of first term.</div>
-    <div class="def-item"><span class="def-term">Persistence</span><span class="def-swatch cobalt"></span>actively enrolled or between semesters.</div>
+    <div class="def-item"><span class="def-term">On-time graduation:</span> completed within 3 years of first term.</div>
+    <div class="def-item"><span class="def-term">Persistence:</span> actively enrolled or between semesters.</div>
   </div>
 
   <div class="section-head">
@@ -609,7 +598,7 @@
       countUp(document.getElementById('termB'), termB);
       countUp(document.getElementById('termAhead'), termAhead);
 
-      document.getElementById('combinedCohorts').textContent = combinedLabel || '—';
+      document.getElementById('combinedCohorts').textContent = combinedLabel ? (combinedLabel + ' Graduation rate') : '—';
       document.getElementById('combinedRate').textContent =
         (combinedRate !== null && !isNaN(combinedRate)) ? Math.round(combinedRate) + '%' : '—';
       document.getElementById('combinedSub').textContent =
@@ -626,8 +615,6 @@
       });
       const allTimeRate = allTimeDenominator > 0 ? (allTimeNumerator / allTimeDenominator * 100) : null;
 
-      document.getElementById('allTimeCohorts').textContent =
-        allTimeCohortCount > 0 ? `${allTimeCohortCount} completed cohorts` : '—';
       document.getElementById('allTimeRate').textContent =
         (allTimeRate !== null && !isNaN(allTimeRate)) ? Math.round(allTimeRate) + '%' : '—';
       document.getElementById('allTimeSub').textContent =
