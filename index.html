@@ -447,10 +447,10 @@
       return;
     }
 
-    const labels = ['Earned degree', 'Stayed on to A-Core', 'A-Core: Persistence + Grads', 'A-Core: On-Time Grads Only'];
+    const labels = ['Earned Degree During High School', 'Stayed on to A-Core', 'A-Core: Persistence + Grads', 'Earned Degree After High School', 'Overall Graduation Rate'];
     const datasets = withData.map((y, i) => ({
       label: y.year,
-      data: [y.degreePct, y.stayedPct, y.persistPct, y.gradPct].map(v => (v === null || isNaN(v)) ? 0 : Math.round(v)),
+      data: [y.degreePct, y.stayedPct, y.persistPct, y.gradPct, y.overallGradPct].map(v => (v === null || isNaN(v)) ? 0 : Math.round(v)),
       backgroundColor: YEAR_COLORS[i % YEAR_COLORS.length],
       borderRadius: 4
     }));
@@ -515,8 +515,10 @@
       const idxStayedPct = findColAll(header, ['stayed on', '(%)']);
       const idxPersistNum = findColAll(header, ['persistence + grads', '(#)']);
       const idxPersistPct = findColAll(header, ['persistence + grads', '(%)']);
-      const idxGradNum = findColAll(header, ['on-time grad', 'a-core', '(#)']);
-      const idxGradPct = findColAll(header, ['on-time grad', 'a-core', '(%)']);
+      const idxGradNum = findColAll(header, ['after high school', '(#)']);
+      const idxGradPct = findColAll(header, ['after high school', '(%)']);
+      const idxOverallGradNum = findColAll(header, ['overall grad', '(#)']);
+      const idxOverallGradPct = findColAll(header, ['overall grad', '(%)']);
 
       const cohortRows = [];
       const aheadYears = [];
@@ -583,7 +585,9 @@
               persistNum: idxPersistNum > -1 ? toInt(row[idxPersistNum]) : null,
               persistPct: idxPersistPct > -1 ? toPercent(row[idxPersistPct]) : null,
               gradNum: idxGradNum > -1 ? toInt(row[idxGradNum]) : null,
-              gradPct: idxGradPct > -1 ? toPercent(row[idxGradPct]) : null
+              gradPct: idxGradPct > -1 ? toPercent(row[idxGradPct]) : null,
+              overallGradNum: idxOverallGradNum > -1 ? toInt(row[idxOverallGradNum]) : null,
+              overallGradPct: idxOverallGradPct > -1 ? toPercent(row[idxOverallGradPct]) : null
             });
           }
         }
