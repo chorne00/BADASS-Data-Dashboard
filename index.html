@@ -55,6 +55,11 @@
   @keyframes blink{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
   .live-tag:not(.error) .dot{ animation:blink 1.8s infinite; }
 
+  .dashboard-desc{
+    font-family:'Inter', sans-serif; font-size:14px; line-height:1.5;
+    color:var(--muted); max-width:640px; margin:16px 0 0;
+  }
+
   .section-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:44px 0 16px; flex-wrap:wrap; }
   .section-head-left{ display:flex; align-items:center; gap:10px; }
   .section-head .bar{ width:7px; height:22px; background:var(--cobalt); border-radius:4px; }
@@ -94,6 +99,18 @@
   }
   .featured-sub{ font-size:12px; color:#B9B7AC; }
   .featured-grid{ display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  .featured-grid.cols-3{ grid-template-columns:repeat(3, 1fr); }
+  .featured-grid.cols-3 .featured-count{ font-size:52px; }
+
+  .def-row{
+    display:flex; gap:28px; flex-wrap:wrap;
+    margin-top:16px; padding-top:14px; border-top:1px solid var(--line);
+  }
+  .def-item{ font-size:12px; line-height:1.5; color:var(--muted); max-width:420px; }
+  .def-term{
+    font-family:'Archivo', sans-serif; font-weight:700; font-size:11px;
+    text-transform:uppercase; letter-spacing:.04em; color:var(--ink); margin-right:5px;
+  }
 
   .table-frame{ border:2px solid var(--ink); border-radius:16px; overflow:hidden; }
   .row{
@@ -169,6 +186,8 @@
     .readouts{grid-template-columns:1fr;}
     .readout-count{font-size:40px;}
     .featured-grid{grid-template-columns:1fr;}
+    .featured-grid.cols-3{grid-template-columns:1fr;}
+    .featured-grid.cols-3 .featured-count{font-size:60px;}
     .ahead-grid{grid-template-columns:1fr;}
     .compare-wrap{flex-direction:column; gap:12px;}
     .compare-col + .compare-col{border-left:none; padding-left:0; border-top:1px solid var(--line); padding-top:10px;}
@@ -185,6 +204,8 @@
     </div>
     <div class="live-tag" id="liveTag"><span class="dot"></span> <span id="liveText">Connecting…</span></div>
   </div>
+
+  <p class="dashboard-desc">Live enrollment, on-time graduation, and persistence outcomes across College Together's SNHU-partnered cohorts, refreshed automatically from our student records roughly every five minutes.</p>
 
   <div class="section-head"><div class="section-head-left"><div class="bar"></div><h2>Current enrollment</h2></div></div>
 
@@ -208,7 +229,7 @@
 
   <div class="section-head"><div class="section-head-left"><div class="bar"></div><h2>Combined on-time graduation rate</h2></div></div>
 
-  <div class="featured-grid">
+  <div class="featured-grid cols-3">
     <div class="featured">
       <div class="featured-label">Two most recent completed cohorts</div>
       <div class="featured-cohorts" id="combinedCohorts">—</div>
@@ -216,11 +237,22 @@
       <div class="featured-sub" id="combinedSub">n = —</div>
     </div>
     <div class="featured">
+      <div class="featured-label">All finalized cohorts</div>
+      <div class="featured-cohorts" id="allTimeCohorts">—</div>
+      <div class="featured-count" id="allTimeRate">--%</div>
+      <div class="featured-sub" id="allTimeSub">n = —</div>
+    </div>
+    <div class="featured">
       <div class="featured-label">All currently active cohorts, pooled</div>
       <div class="featured-cohorts">Persistence rate</div>
       <div class="featured-count" id="pooledRate">--%</div>
       <div class="featured-sub" id="pooledSub">n = —</div>
     </div>
+  </div>
+
+  <div class="def-row">
+    <div class="def-item"><span class="def-term">On-time graduation</span>completed within 3 years of first term.</div>
+    <div class="def-item"><span class="def-term">Persistence</span>actively enrolled or between semesters.</div>
   </div>
 
   <div class="section-head">
@@ -322,7 +354,9 @@
     return {
       value: isCompleted ? r.overall : r.persistence,
       caption: isCompleted ? 'On-time graduation rate' : 'Persistence rate',
-      n: r.n
+      n: r.n,
+      activeN: isCompleted ? undefined : r.activeN,
+      onHoldN: isCompleted ? undefined : r.onHoldN
     };
   }
 
@@ -331,13 +365,30 @@
     const has = m.value !== null && m.value !== undefined && !isNaN(m.value);
     const pct = has ? m.value : 0;
     const label = has ? Math.round(m.value) + '%' : '—';
-    const nLabel = (m.n !== null && m.n !== undefined && !isNaN(m.n)) ? `(n = ${m.n})` : '';
+
+    // Next to the percent: raw N as "(X students)"
+    const nStudentsLabel = (m.n !== null && m.n !== undefined && !isNaN(m.n)) ? `(${m.n} students)` : '';
+
+    // Next to the caption: N for graduation rows, active/on-hold split for persistence rows (when available)
+    let captionExtra = '';
+    if(isCompleted){
+      if(m.n !== null && m.n !== undefined && !isNaN(m.n)){
+        captionExtra = ` (n = ${m.n})`;
+      }
+    } else {
+      const hasActive = m.activeN !== null && m.activeN !== undefined && !isNaN(m.activeN);
+      const hasOnHold = m.onHoldN !== null && m.onHoldN !== undefined && !isNaN(m.onHoldN);
+      if(hasActive && hasOnHold){
+        captionExtra = ` (${m.activeN} active, ${m.onHoldN} on-hold)`;
+      }
+    }
+
     return `
-      <div class="metric-caption">${m.caption}</div>
+      <div class="metric-caption">${m.caption}${captionExtra}</div>
       <div class="metric">
         <div class="bar-track"><div class="bar-fill ${barClass}" data-pct="${pct}"></div></div>
         <div class="num${has ? '' : ' dash'}">${label}</div>
-        <div class="n-count">${nLabel}</div>
+        <div class="n-count">${nStudentsLabel}</div>
       </div>`;
   }
 
@@ -456,6 +507,8 @@
       const idxFlexN = findCol(header, 'flex n');
       const idxCorePersist = findCol(header, 'core persistence');
       const idxFlexPersist = findCol(header, 'flex persistence');
+      const idxActiveN = findCol(header, 'persistence active n');
+      const idxOnHoldN = findCol(header, 'persistence on hold n');
       const idxAheadYear = findCol(header, 'ahead year');
       const idxTotalN = findCol(header, 'total n');
       const idxFormerN = findCol(header, 'former ahead');
@@ -492,7 +545,9 @@
             coreN: idxCoreN > -1 ? toInt(row[idxCoreN]) : null,
             flexN: idxFlexN > -1 ? toInt(row[idxFlexN]) : null,
             corePersist: idxCorePersist > -1 ? toPercent(row[idxCorePersist]) : null,
-            flexPersist: idxFlexPersist > -1 ? toPercent(row[idxFlexPersist]) : null
+            flexPersist: idxFlexPersist > -1 ? toPercent(row[idxFlexPersist]) : null,
+            activeN: idxActiveN > -1 ? toInt(row[idxActiveN]) : null,
+            onHoldN: idxOnHoldN > -1 ? toInt(row[idxOnHoldN]) : null
           });
         } else if(/active a-term/i.test(label)){
           termA = toInt(row[1]);
@@ -551,6 +606,24 @@
         (combinedRate !== null && !isNaN(combinedRate)) ? Math.round(combinedRate) + '%' : '—';
       document.getElementById('combinedSub').textContent =
         (combinedN !== null && !isNaN(combinedN)) ? `n = ${combinedN}` : 'n = —';
+
+      // All-finalized-cohorts rate — computed client-side from every Completed cohort row, weighted by n
+      let allTimeNumerator = 0, allTimeDenominator = 0, allTimeCohortCount = 0;
+      cohortRows.forEach(r => {
+        if(r.status === 'Completed' && r.overall !== null && !isNaN(r.overall) && r.n !== null && !isNaN(r.n)){
+          allTimeNumerator += (r.overall / 100) * r.n;
+          allTimeDenominator += r.n;
+          allTimeCohortCount++;
+        }
+      });
+      const allTimeRate = allTimeDenominator > 0 ? (allTimeNumerator / allTimeDenominator * 100) : null;
+
+      document.getElementById('allTimeCohorts').textContent =
+        allTimeCohortCount > 0 ? `${allTimeCohortCount} completed cohorts` : '—';
+      document.getElementById('allTimeRate').textContent =
+        (allTimeRate !== null && !isNaN(allTimeRate)) ? Math.round(allTimeRate) + '%' : '—';
+      document.getElementById('allTimeSub').textContent =
+        allTimeDenominator > 0 ? `n = ${allTimeDenominator}` : 'n = —';
 
       document.getElementById('pooledRate').textContent =
         (pooledRate !== null && !isNaN(pooledRate)) ? Math.round(pooledRate) + '%' : '—';
